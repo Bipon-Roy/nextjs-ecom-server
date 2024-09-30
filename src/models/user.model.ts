@@ -1,27 +1,31 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { compare, genSalt, hash } from "bcrypt";
-
+import { genSalt, hash } from "bcrypt";
+import jwt from "jsonwebtoken";
 interface UserDocument extends Document {
     email: string;
     name: string;
     password: string;
     role: "admin" | "user";
-    avatar?: { url: string; id: string };
+    avatar?: string;
     verified: boolean;
+    refreshToken: string;
 }
 
-interface Method {
+interface Methods {
     comparePassword(password: string): Promise<boolean>;
+    generateAccessToken(): string;
+    generateRefreshToken(): string;
 }
 
-const userSchema = new Schema<UserDocument, {}, Method>(
+const userSchema = new Schema<UserDocument, {}, Methods>(
     {
         email: { type: String, required: true, unique: true },
         name: { type: String, required: true, trim: true },
         password: { type: String, required: true },
         role: { type: String, enum: ["admin", "user"], default: "user" },
-        avatar: { type: Object, url: String, id: String },
+        avatar: { type: String },
         verified: { type: Boolean, default: false },
+        refreshToken: { type: String },
     },
     { timestamps: true, versionKey: false }
 );
@@ -39,4 +43,29 @@ userSchema.pre("save", async function (next) {
     }
 });
 
-export const UserModel = mongoose.model<UserDocument, mongoose.Model<UserDocument, {}, Method>>("User", userSchema);
+userSchema.methods.generateAccessToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+            email: this.email,
+            name: this.name,
+        },
+        process.env.ACCESS_TOKEN_SECRET!,
+        {
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+    );
+};
+
+userSchema.methods.generateRefreshToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+        },
+        process.env.REFRESH_TOKEN_SECRET!,
+        {
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+        }
+    );
+};
+export const UserModel = mongoose.model<UserDocument, mongoose.Model<UserDocument, {}, Methods>>("User", userSchema);
