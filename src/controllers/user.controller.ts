@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
-import { UserModel } from "../models/user.model";
+import { UserModel } from "../models/user/user.model";
 import { ApiError } from "../utils/apiError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { NewUserRequest, SignInRequest } from "../types";
+import { ForgetPassReq, NewUserRequest, SignInRequest } from "../types";
 import crypto from "crypto";
-import { EmailVerificationToken } from "../models/emailVerification.model";
+import { EmailVerificationToken } from "../models/user/emailVerification.model";
 import { sendEmail } from "../utils/sendEmail";
 import { ApiResponse } from "../utils/apiResponse";
+import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -112,4 +113,38 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
                 "User logged In Successfully"
             )
         );
+});
+
+export const forgetPassword = asyncHandler(async (req: Request, res: Response) => {
+    const { email } = req.body as ForgetPassReq;
+    if (!email) {
+        throw new ApiError(400, "email is required");
+    }
+
+    const user = await UserModel.findOne({
+        email: email,
+    });
+
+    if (!user) {
+        throw new ApiError(404, "User does not exist");
+    }
+
+    //generating token and send password reset link
+    await PasswordResetTokenModel.findOneAndDelete({ user: user._id });
+
+    const token = crypto.randomBytes(64).toString("hex");
+    await PasswordResetTokenModel.create({
+        user: user._id,
+        token,
+    });
+
+    const resetPasswordUrl = `${process.env.PASSWORD_RESET_URL}?token=${token}&userId=${user._id}`;
+
+    sendEmail({
+        profile: { name: user.name, email: user.email },
+        subject: "forget-password",
+        linkUrl: resetPasswordUrl,
+    });
+
+    return res.status(200).json(new ApiResponse(200, "Please Check Your Email"));
 });
