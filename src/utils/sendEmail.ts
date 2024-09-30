@@ -53,12 +53,15 @@ export const sendEmail = (options: EmailOptions) => {
     switch (subject) {
         case "verification": {
             sendEmailVerification(profile, linkUrl!);
+            break;
         }
         case "forget-password": {
             sendForgetPassLink(profile, linkUrl!);
+            break;
         }
         case "password-changed": {
             sendUpdatePassConfirmation(profile);
+            break;
         }
     }
 };

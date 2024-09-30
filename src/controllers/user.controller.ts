@@ -29,6 +29,20 @@ const generateAccessAndRefreshTokens = async (userId: string) => {
 
 export const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const body = (await req.body) as NewUserRequest;
+    const { name, email, password } = body;
+
+    if ([name, email, password].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const existedUser = await UserModel.findOne({
+        $or: [{ email }],
+    });
+
+    if (existedUser) {
+        throw new ApiError(409, "User with email or username already exists");
+    }
+
     const newUser = await UserModel.create({ ...body });
     const token = crypto.randomBytes(64).toString("hex");
 
@@ -45,5 +59,11 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
         linkUrl: verificationUrl,
     });
 
-    return res.status(201).json(new ApiResponse(200, newUser, "User registered successfully!"));
+    const createdUser = await UserModel.findById(newUser._id).select("-password -refreshToken");
+
+    if (!createdUser) {
+        throw new ApiError(500, "Something went wrong while registering the user");
+    }
+
+    return res.status(200).json(new ApiResponse(200, createdUser, "User registered successfully!"));
 });
