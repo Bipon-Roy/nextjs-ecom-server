@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { genSalt, hash } from "bcrypt";
+import { genSalt, hash, compare } from "bcrypt";
 import jwt from "jsonwebtoken";
+
 interface UserDocument extends Document {
     email: string;
     name: string;
@@ -29,6 +30,14 @@ const userSchema = new Schema<UserDocument, {}, Methods>(
     },
     { timestamps: true, versionKey: false }
 );
+
+userSchema.methods.comparePassword = async function (password: string) {
+    try {
+        return await compare(password, this.password);
+    } catch (error) {
+        throw error;
+    }
+};
 
 userSchema.pre("save", async function (next) {
     try {
