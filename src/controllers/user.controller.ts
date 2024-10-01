@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 import { UserModel } from "../models/user/user.model";
 import { ApiError } from "../utils/apiError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { ForgetPassReq, NewUserRequest, SignInRequest } from "../types";
+import { ForgetPassReq, NewUserRequest, SignInRequest, UpdatePasswordRequest } from "../types";
 import crypto from "crypto";
 import { EmailVerificationToken } from "../models/user/emailVerification.model";
 import { sendEmail } from "../utils/sendEmail";
 import { ApiResponse } from "../utils/apiResponse";
 import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
+import { isValidObjectId } from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -147,4 +148,44 @@ export const forgetPassword = asyncHandler(async (req: Request, res: Response) =
     });
 
     return res.status(200).json(new ApiResponse(200, "Please Check Your Email"));
+});
+
+export const updatePassword = asyncHandler(async (req: Request, res: Response) => {
+    const { password, token, userId } = req.body as UpdatePasswordRequest;
+
+    if (!password || !token || !isValidObjectId(userId)) {
+        throw new ApiError(401, "Invalid request!");
+    }
+
+    const resetToken = await PasswordResetTokenModel.findOne({ user: userId });
+    if (!resetToken) {
+        throw new ApiError(401, "Unauthorized request!");
+    }
+    const matched = await resetToken.compareToken(token);
+
+    if (!matched) {
+        throw new ApiError(401, "Unauthorized request!");
+    }
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new ApiError(404, "User not found!");
+    }
+
+    const isMatched = await user.comparePassword(password);
+
+    if (isMatched) {
+        throw new ApiError(403, "New password must be different!");
+    }
+
+    user.password = password;
+    await user.save();
+
+    await PasswordResetTokenModel.findByIdAndDelete(resetToken._id);
+
+    sendEmail({
+        profile: { name: user.name, email: user.email },
+        subject: "password-changed",
+    });
+
+    return res.status(200).json(new ApiResponse(200, "Your password is now changed."));
 });

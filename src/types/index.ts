@@ -11,3 +11,9 @@ export interface SignInRequest {
 export interface ForgetPassReq {
     email: string;
 }
+
+export interface UpdatePasswordRequest {
+    password: string;
+    token: string;
+    userId: string;
+}
