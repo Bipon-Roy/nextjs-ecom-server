@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { UserModel } from "../models/user/user.model";
 import { ApiError } from "../utils/apiError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { ForgetPassReq, NewUserRequest, SignInRequest, UpdatePasswordRequest } from "../types";
+import { EmailVerifyRequest, ForgetPassReq, NewUserRequest, SignInRequest, UpdatePasswordRequest } from "../types";
 import crypto from "crypto";
 import { EmailVerificationToken } from "../models/user/emailVerification.model";
 import { sendEmail } from "../utils/sendEmail";
@@ -188,4 +188,32 @@ export const updatePassword = asyncHandler(async (req: Request, res: Response) =
     });
 
     return res.status(200).json(new ApiResponse(200, "Your password is now changed."));
+});
+
+export const verifyUserByEmail = asyncHandler(async (req: Request, res: Response) => {
+    const { token, userId } = req.body as EmailVerifyRequest;
+
+    if (!token || !isValidObjectId(userId)) {
+        throw new ApiError(401, "Invalid Request, userId and token is required");
+    }
+
+    const verifyToken = await EmailVerificationToken.findOne({ user: userId });
+
+    if (!verifyToken) {
+        throw new ApiError(401, "Invalid Request");
+    }
+
+    const isVerified = await verifyToken.compareToken(token);
+
+    if (!isVerified) {
+        throw new ApiError(401, "Invalid token, token doesn't match!");
+    }
+
+    await UserModel.findByIdAndUpdate(userId, {
+        verified: true,
+    });
+
+    await EmailVerificationToken.findByIdAndDelete(verifyToken._id);
+
+    return res.status(200).json(new ApiResponse(200, "Your email is verified"));
 });

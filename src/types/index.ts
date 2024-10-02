@@ -17,3 +17,8 @@ export interface UpdatePasswordRequest {
     token: string;
     userId: string;
 }
+
+export interface EmailVerifyRequest {
+    token: string;
+    userId: string;
+}
