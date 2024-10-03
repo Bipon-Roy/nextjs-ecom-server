@@ -1,3 +1,5 @@
+import { UserDocument } from "../models/user/user.model";
+
 export interface NewUserRequest {
     name: string;
     email: string;
@@ -21,4 +23,12 @@ export interface UpdatePasswordRequest {
 export interface EmailVerifyRequest {
     token: string;
     userId: string;
+}
+
+declare global {
+    namespace Express {
+        interface Request {
+            user?: UserDocument;
+        }
+    }
 }

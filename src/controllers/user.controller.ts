@@ -2,7 +2,13 @@ import { Request, Response } from "express";
 import { UserModel } from "../models/user/user.model";
 import { ApiError } from "../utils/apiError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { EmailVerifyRequest, ForgetPassReq, NewUserRequest, SignInRequest, UpdatePasswordRequest } from "../types";
+import {
+    EmailVerifyRequest,
+    ForgetPassReq,
+    NewUserRequest,
+    SignInRequest,
+    UpdatePasswordRequest,
+} from "../types/index";
 import crypto from "crypto";
 import { EmailVerificationToken } from "../models/user/emailVerification.model";
 import { sendEmail } from "../utils/sendEmail";
@@ -216,4 +222,29 @@ export const verifyUserByEmail = asyncHandler(async (req: Request, res: Response
     await EmailVerificationToken.findByIdAndDelete(verifyToken._id);
 
     return res.status(200).json(new ApiResponse(200, "Your email is verified"));
+});
+
+export const logoutUser = asyncHandler(async (req, res) => {
+    await UserModel.findByIdAndUpdate(
+        req.user._id,
+        {
+            $unset: {
+                refreshToken: 1,
+            },
+        },
+        {
+            new: true,
+        }
+    );
+
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", options)
+        .clearCookie("refreshToken", options)
+        .json(new ApiResponse(200, {}, "User logged Out"));
 });
