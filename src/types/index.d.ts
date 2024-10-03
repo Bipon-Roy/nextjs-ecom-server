@@ -32,3 +32,7 @@ declare global {
         }
     }
 }
+
+export interface TokenPayload extends JwtPayload {
+    _id: string;
+}

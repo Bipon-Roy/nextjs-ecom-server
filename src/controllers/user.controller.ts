@@ -7,6 +7,7 @@ import {
     ForgetPassReq,
     NewUserRequest,
     SignInRequest,
+    TokenPayload,
     UpdatePasswordRequest,
 } from "../types/index";
 import crypto from "crypto";
@@ -15,6 +16,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { ApiResponse } from "../utils/apiResponse";
 import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -52,7 +54,7 @@ export const registerUser = asyncHandler(async (req: Request, res: Response) => 
     }
 
     const newUser = await UserModel.create({ ...body });
-    const token = crypto.randomBytes(64).toString("hex");
+    const token = crypto.randomBytes(32).toString("hex");
 
     await EmailVerificationToken.create({
         user: newUser._id,
@@ -139,7 +141,7 @@ export const forgetPassword = asyncHandler(async (req: Request, res: Response) =
     //generating token and send password reset link
     await PasswordResetTokenModel.findOneAndDelete({ user: user._id });
 
-    const token = crypto.randomBytes(64).toString("hex");
+    const token = crypto.randomBytes(32).toString("hex");
     await PasswordResetTokenModel.create({
         user: user._id,
         token,
@@ -222,6 +224,43 @@ export const verifyUserByEmail = asyncHandler(async (req: Request, res: Response
     await EmailVerificationToken.findByIdAndDelete(verifyToken._id);
 
     return res.status(200).json(new ApiResponse(200, "Your email is verified"));
+});
+
+export const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
+    const oldRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!oldRefreshToken) {
+        throw new ApiError(401, "unauthorized request");
+    }
+
+    try {
+        const decodedToken = jwt.verify(oldRefreshToken, process.env.REFRESH_TOKEN_SECRET!) as TokenPayload;
+
+        const user = await UserModel.findById(decodedToken?._id);
+
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token");
+        }
+
+        if (oldRefreshToken !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or used");
+        }
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+        };
+
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(String(user._id));
+
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(new ApiResponse(200, { accessToken, refreshToken: refreshToken }, "Access token refreshed"));
+    } catch (error: any) {
+        throw new ApiError(401, error?.message || "Invalid refresh token");
+    }
 });
 
 export const logoutUser = asyncHandler(async (req, res) => {
