@@ -17,7 +17,7 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/product", productRoutes);
+app.use("/api/v1/products", productRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
