@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import { Document, Schema, models, model } from "mongoose";
 import categories from "../utils/productCategories";
 
 export interface ProductDocument extends Document {
@@ -45,4 +45,4 @@ const productSchema = new Schema<ProductDocument>(
     { timestamps: true, versionKey: false }
 );
 
-export const ProductModel = mongoose.model<ProductDocument>("Product", productSchema);
+export const ProductModel = models.Product || model<ProductDocument>("Product", productSchema);

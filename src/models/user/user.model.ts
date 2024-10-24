@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import { Document, Schema, models, model, Model } from "mongoose";
 import { genSalt, hash, compare } from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -78,4 +78,4 @@ userSchema.methods.generateRefreshToken = function () {
     );
 };
 
-export const UserModel = mongoose.model<UserDocument, mongoose.Model<UserDocument, {}, Methods>>("User", userSchema);
+export const UserModel = models.User || model<UserDocument, Model<UserDocument, {}, Methods>>("User", userSchema);

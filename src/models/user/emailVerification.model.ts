@@ -1,5 +1,5 @@
 import { compare, genSalt, hash } from "bcrypt";
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import { Document, ObjectId, Schema, models, model, Model } from "mongoose";
 
 interface EmailVerificationToken extends Document {
     user: ObjectId;
@@ -50,7 +50,9 @@ EmailVerificationTokenSchema.methods.compareToken = async function (tokenToCompa
     }
 };
 
-export const EmailVerificationToken = mongoose.model<
-    EmailVerificationToken,
-    mongoose.Model<EmailVerificationToken, {}, Methods>
->("EmailVerificationToken", EmailVerificationTokenSchema);
+export const EmailVerificationToken =
+    models.EmailVerificationToken ||
+    model<EmailVerificationToken, Model<EmailVerificationToken, {}, Methods>>(
+        "EmailVerificationToken",
+        EmailVerificationTokenSchema
+    );

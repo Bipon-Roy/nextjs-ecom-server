@@ -1,5 +1,5 @@
 import { compare, genSalt, hash } from "bcrypt";
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import { Document, ObjectId, Schema, models, model, Model } from "mongoose";
 
 interface PasswordResetTokenDocument extends Document {
     user: ObjectId;
@@ -50,7 +50,9 @@ passwordResetTokenSchema.methods.compareToken = async function (tokenToCompare) 
     }
 };
 
-export const PasswordResetTokenModel = mongoose.model<
-    PasswordResetTokenDocument,
-    mongoose.Model<PasswordResetTokenDocument, {}, Methods>
->("PasswordResetToken", passwordResetTokenSchema);
+export const PasswordResetTokenModel =
+    models.PasswordResetToken ||
+    model<PasswordResetTokenDocument, Model<PasswordResetTokenDocument, {}, Methods>>(
+        "PasswordResetToken",
+        passwordResetTokenSchema
+    );
