@@ -17,5 +17,5 @@ const featuredProductSchema = new Schema<FeaturedProductDocument>({
     linkTitle: { type: String, required: true },
 });
 
-export const ProductModel =
+export const FeaturedProductModel =
     models.FeaturedProduct || model<FeaturedProductDocument>("FeaturedProduct", featuredProductSchema);
