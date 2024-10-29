@@ -1,14 +1,9 @@
 import { Request, Response } from "express";
 import { CartModel } from "../models/cart.model";
-import { isValidObjectId } from "mongoose";
 import { ApiResponse } from "../utils/apiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { ApiError } from "../utils/apiError";
 
 export const getCartItems = asyncHandler(async (req: Request, res: Response) => {
-    if (isValidObjectId(req.user._id)) {
-        throw new ApiError(400, "Invalid userID");
-    }
     const cart = await CartModel.aggregate([
         { $match: { userId: req.user._id } },
         { $unwind: "$items" },
