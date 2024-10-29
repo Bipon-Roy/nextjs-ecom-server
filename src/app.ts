@@ -3,7 +3,8 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.routes";
 import productRoutes from "./routes/product.routes";
-import featuredProductRoutes from "./routes/featuredproduct.routes";
+import featuredProductRoutes from "./routes/featuredProduct.routes";
+import cartRoutes from "./routes/cart.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cookieParser());
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/featured-products", featuredProductRoutes);
+app.use("/api/v1/cart", cartRoutes);
 
 // Error handling middleware
 app.use(errorHandler);

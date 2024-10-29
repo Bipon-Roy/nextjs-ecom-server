@@ -263,7 +263,7 @@ export const refreshAccessToken = asyncHandler(async (req: Request, res: Respons
     }
 });
 
-export const logoutUser = asyncHandler(async (req, res) => {
+export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     await UserModel.findByIdAndUpdate(
         req.user._id,
         {
