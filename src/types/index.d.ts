@@ -42,7 +42,14 @@ export interface NewCartRequest {
     quantity: number;
 }
 
-interface CartItem {
+export interface CartItem {
     productId: Types.ObjectId;
     quantity: number;
+}
+
+interface PopulatedWishlistProduct {
+    _id: string;
+    title: string;
+    thumbnail: { url: string };
+    price: { discounted: number };
 }
