@@ -36,3 +36,13 @@ declare global {
 export interface TokenPayload extends JwtPayload {
     _id: string;
 }
+
+export interface NewCartRequest {
+    productId: string;
+    quantity: number;
+}
+
+interface CartItem {
+    productId: Types.ObjectId;
+    quantity: number;
+}
