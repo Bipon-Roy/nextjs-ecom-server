@@ -6,6 +6,7 @@ import productRoutes from "./routes/product.routes";
 import featuredProductRoutes from "./routes/featuredProduct.routes";
 import cartRoutes from "./routes/cart.routes";
 import wishlistRoutes from "./routes/wishlist.routes";
+import orderRoutes from "./routes/order.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/v1/products", productRoutes);
 app.use("/api/v1/featured-products", featuredProductRoutes);
 app.use("/api/v1/cart", cartRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
+app.use("/api/v1/orders", orderRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
