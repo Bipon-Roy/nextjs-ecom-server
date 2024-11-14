@@ -291,3 +291,36 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
 export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json(new ApiResponse(200, req.user, "User fetched successfully"));
 });
+
+export const updateUserProfile = async (req: Request, res: Response) => {
+    try {
+        const { name } = req.body;
+        const avatar = req.file;
+
+        if (!name && !avatar) {
+            return res
+                .status(400)
+                .json(new ApiResponse(400, { message: "At least one of 'name' or 'avatar' must be provided." }));
+        }
+
+        // Get the current user from the request (Assuming user is already authenticated)
+        const user = await UserModel.findById(req.user._id);
+        if (!user) {
+            throw new ApiError(404, "User not found.");
+        }
+
+        // Update username if provided
+        if (name) {
+            user.name = name;
+        }
+
+        //   todo:handle image file upload
+
+        await user.save();
+
+        return res.status(200).json(new ApiResponse(200, { user }, "User profile updated successfully."));
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json(new ApiResponse(500, { message: "An error occurred while updating the profile." }));
+    }
+};
