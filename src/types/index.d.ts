@@ -47,7 +47,7 @@ export interface CartItem {
     quantity: number;
 }
 
-interface PopulatedWishlistProduct {
+export interface PopulatedWishlistProduct {
     _id: string;
     title: string;
     thumbnail: { url: string };
