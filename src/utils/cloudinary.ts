@@ -34,4 +34,8 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
     }
 };
 
-export { uploadOnCloudinary };
+const removeImageFromCloud = async (publicId: string) => {
+    await cloudinary.uploader.destroy(publicId);
+};
+
+export { uploadOnCloudinary, removeImageFromCloud };

@@ -17,6 +17,7 @@ import { ApiResponse } from "../utils/apiResponse";
 import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -295,7 +296,7 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
 export const updateUserProfile = async (req: Request, res: Response) => {
     try {
         const { name } = req.body;
-        const avatar = req.file;
+        const avatar = req.file?.path;
 
         if (!name && !avatar) {
             return res
@@ -313,8 +314,17 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         if (name) {
             user.name = name;
         }
+        //todo:Delete existing image  on cloudinary before upload
+        if (avatar) {
+            const cloudinaryResponse = await uploadOnCloudinary(avatar);
+            console.log("cloudinaryResponse", cloudinaryResponse);
 
-        //   todo:handle image file upload
+            if (!cloudinaryResponse) {
+                throw new ApiError(400, "Error while uploading on avatar");
+            }
+
+            user.avatar = cloudinaryResponse.url;
+        }
 
         await user.save();
 
