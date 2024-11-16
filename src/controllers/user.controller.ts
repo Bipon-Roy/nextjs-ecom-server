@@ -17,7 +17,7 @@ import { ApiResponse } from "../utils/apiResponse";
 import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -310,20 +310,22 @@ export const updateUserProfile = async (req: Request, res: Response) => {
             throw new ApiError(404, "User not found.");
         }
 
-        // Update username if provided
-        if (name) {
-            user.name = name;
+        // If a new avatar is provided, delete the old avatar from Cloudinary
+        if (avatar && user.avatar?.id) {
+            await removeImageFromCloud(user.avatar.id);
         }
-        //todo:Delete existing image  on cloudinary before upload
+
         if (avatar) {
             const cloudinaryResponse = await uploadOnCloudinary(avatar);
-            console.log("cloudinaryResponse", cloudinaryResponse);
 
             if (!cloudinaryResponse) {
                 throw new ApiError(400, "Error while uploading on avatar");
             }
 
-            user.avatar = cloudinaryResponse.url;
+            user.avatar = {
+                url: cloudinaryResponse.url,
+                id: cloudinaryResponse.public_id,
+            };
         }
 
         await user.save();

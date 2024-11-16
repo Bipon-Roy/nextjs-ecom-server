@@ -24,7 +24,7 @@ const userSchema = new Schema<UserDocument, {}, Methods>(
         name: { type: String, required: true, trim: true },
         password: { type: String, required: true },
         role: { type: String, enum: ["admin", "user"], default: "user" },
-        avatar: { type: String },
+        avatar: { type: Object, url: String, id: String },
         verified: { type: Boolean, default: false },
         refreshToken: { type: String },
     },
