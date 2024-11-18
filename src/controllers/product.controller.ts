@@ -35,3 +35,5 @@ export const getProductByCategory = asyncHandler(async (req: Request, res: Respo
 
     return res.status(200).json(new ApiResponse(200, products, `Products fetched successfully`));
 });
+
+export const addProductReviews = asyncHandler(async (req: Request, res: Response) => {});

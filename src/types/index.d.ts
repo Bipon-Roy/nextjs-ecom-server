@@ -53,3 +53,9 @@ export interface PopulatedWishlistProduct {
     thumbnail: { url: string };
     price: { discounted: number };
 }
+
+export interface ReviewRequestType {
+    productId: string;
+    rating: number;
+    comment?: string;
+}
