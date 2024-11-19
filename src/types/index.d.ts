@@ -59,3 +59,10 @@ export interface ReviewRequestType {
     rating: number;
     comment?: string;
 }
+
+export interface FeaturedProduct {
+    banner?: string;
+    link: string;
+    linkTitle: string;
+    title: string;
+}
