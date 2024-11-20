@@ -26,7 +26,8 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
 
         return response;
     } catch (error) {
-        // Clean up the local file in case of failure
+        console.log(error);
+
         if (localFilePath) {
             fs.unlinkSync(localFilePath);
         }
@@ -35,7 +36,11 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
 };
 
 const removeImageFromCloud = async (publicId: string) => {
-    await cloudinary.uploader.destroy(publicId);
+    try {
+        await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+        console.log(error);
+    }
 };
 
 export { uploadOnCloudinary, removeImageFromCloud };

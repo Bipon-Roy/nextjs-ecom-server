@@ -11,15 +11,20 @@ import { upload } from "../middlewares/multer.middleware";
 
 const router = Router();
 // Middleware for handling multiple file fields
-const uploadFields = upload.fields([
-    { name: "thumbnail", maxCount: 1 },
-    { name: "images", maxCount: 10 },
-]);
 
 router.route("/all").get(getAllProducts);
 router.route("/:id").get(getProductById);
 router.route("/category/:category").get(getProductByCategory);
 router.route("/add-review").post(verifyToken, addProductReviews);
-router.post("/add-product", uploadFields, addNewProduct);
+
+router.post(
+    "/add-product",
+    verifyToken,
+    upload.fields([
+        { name: "thumbnail", maxCount: 1 },
+        { name: "images", maxCount: 5 },
+    ]),
+    addNewProduct
+);
 
 export default router;

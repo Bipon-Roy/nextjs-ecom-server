@@ -71,20 +71,20 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // Upload additional images to Cloudinary
-    const uploadedImages = [];
-    for (const imageFile of imageFiles) {
-        const imageResponse = await uploadOnCloudinary(imageFile.path);
+    const uploadedImages = await Promise.all(
+        imageFiles.map(async (imageFile) => {
+            const imageResponse = await uploadOnCloudinary(imageFile.path);
 
-        if (!imageResponse) {
-            throw new ApiError(500, "Error while uploading product images to Cloudinary");
-        }
+            if (!imageResponse) {
+                throw new ApiError(500, `Error while uploading file ${imageFile.originalname} to Cloudinary`);
+            }
 
-        uploadedImages.push({
-            url: imageResponse.secure_url,
-            id: imageResponse.public_id,
-        });
-    }
-
+            return {
+                url: imageResponse.secure_url,
+                id: imageResponse.public_id,
+            };
+        })
+    );
     // Create a new product
     const product = await ProductModel.create({
         title,
