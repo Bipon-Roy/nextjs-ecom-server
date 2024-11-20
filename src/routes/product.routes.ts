@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
     addNewProduct,
     addProductReviews,
+    deleteProduct,
     getAllProducts,
     getProductByCategory,
     getProductById,
@@ -26,5 +27,7 @@ router.post(
     ]),
     addNewProduct
 );
+
+router.route("/:id").delete(verifyToken, deleteProduct);
 
 export default router;

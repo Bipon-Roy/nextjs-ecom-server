@@ -329,8 +329,13 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         }
 
         await user.save();
+        const updatedUser = await UserModel.findById(user._id).select("-password -refreshToken");
 
-        return res.status(200).json(new ApiResponse(200, { user }, "User profile updated successfully."));
+        if (!updatedUser) {
+            throw new ApiError(500, "Something went wrong while updating user profile");
+        }
+
+        return res.status(200).json(new ApiResponse(200, updatedUser, "User profile updated successfully."));
     } catch (error) {
         console.error(error);
         return res.status(500).json(new ApiResponse(500, { message: "An error occurred while updating the profile." }));

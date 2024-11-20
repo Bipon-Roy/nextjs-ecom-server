@@ -3,10 +3,10 @@ import { ProductModel } from "../models/product.model";
 import { ApiError } from "../utils/apiError";
 import { ApiResponse } from "../utils/apiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { NewProductInfo, ReviewRequestType } from "../types";
+import { IProductImage, NewProductInfo, ReviewRequestType } from "../types";
 import { isValidObjectId, Types } from "mongoose";
 import { ReviewModel } from "../models/review.model";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
 import categories from "../utils/productCategories";
 
 export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
@@ -153,4 +153,34 @@ export const addProductReviews = asyncHandler(async (req: Request, res: Response
     }
 
     return res.status(201).json(new ApiResponse(201, "Thanks for your feedback!"));
+});
+
+export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    // Find the product by ID
+    const product = await ProductModel.findById(id);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    // Delete the thumbnail image from Cloudinary
+    const thumbnailId = product.thumbnail?.id;
+    if (thumbnailId) {
+        await removeImageFromCloud(thumbnailId);
+    }
+
+    // Delete additional images from Cloudinary
+    const imageIds: string[] = product.images?.map((image: IProductImage) => image.id) || [];
+    await Promise.all(
+        imageIds.map(async (publicId: string) => {
+            await removeImageFromCloud(publicId);
+        })
+    );
+
+    // Delete the product from the database
+    await product.deleteOne();
+
+    return res.status(200).json(new ApiResponse(200, null, "Product deleted successfully"));
 });

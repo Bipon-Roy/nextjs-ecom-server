@@ -79,3 +79,9 @@ export interface NewProductInfo {
     thumbnail?: File;
     images: File[];
 }
+
+export interface IProductImage {
+    url: string;
+    id: string;
+    _id: string;
+}
