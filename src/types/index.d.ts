@@ -1,4 +1,5 @@
 import { UserDocument } from "../models/user/user.model";
+import { Express } from "express";
 
 export interface NewUserRequest {
     name: string;
@@ -65,4 +66,16 @@ export interface FeaturedProduct {
     link: string;
     linkTitle: string;
     title: string;
+}
+
+export interface NewProductInfo {
+    title: string;
+    description: string;
+    bulletPoints: string[];
+    mrp: number;
+    salePrice: number;
+    category: string;
+    quantity: number;
+    thumbnail?: File;
+    images: File[];
 }
