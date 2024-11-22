@@ -4,6 +4,7 @@ import {
     getCurrentUser,
     loginUser,
     logoutUser,
+    refreshAccessToken,
     registerUser,
     updatePassword,
     updateUserProfile,
@@ -19,8 +20,11 @@ router.route("/signin").post(loginUser);
 router.route("/forget-password").post(forgetPassword);
 router.route("/update-password").post(updatePassword);
 router.route("/verify").post(verifyUserByEmail);
+router.route("/refresh-token").post(refreshAccessToken);
 router.route("/current-user").get(verifyToken, getCurrentUser);
+
 router.put("/update-profile", verifyToken, upload.single("avatar"), updateUserProfile);
+
 router.route("/logout").post(verifyToken, logoutUser);
 
 export default router;

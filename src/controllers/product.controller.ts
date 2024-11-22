@@ -106,6 +106,36 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
     return res.status(201).json(new ApiResponse(201, product, "Product added successfully"));
 });
 
+export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    // Find the product by ID
+    const product = await ProductModel.findById(id);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    // Delete the thumbnail image from Cloudinary
+    const thumbnailId = product.thumbnail?.id;
+    if (thumbnailId) {
+        await removeImageFromCloud(thumbnailId);
+    }
+
+    // Delete additional images from Cloudinary
+    const imageIds: string[] = product.images?.map((image: IProductImage) => image.id) || [];
+    await Promise.all(
+        imageIds.map(async (publicId: string) => {
+            await removeImageFromCloud(publicId);
+        })
+    );
+
+    // Delete the product from the database
+    await product.deleteOne();
+
+    return res.status(200).json(new ApiResponse(200, null, "Product deleted successfully"));
+});
+
 export const addProductReviews = asyncHandler(async (req: Request, res: Response) => {
     const { productId, comment, rating } = req.body as ReviewRequestType;
 
@@ -153,34 +183,4 @@ export const addProductReviews = asyncHandler(async (req: Request, res: Response
     }
 
     return res.status(201).json(new ApiResponse(201, "Thanks for your feedback!"));
-});
-
-export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    // Find the product by ID
-    const product = await ProductModel.findById(id);
-
-    if (!product) {
-        throw new ApiError(404, "Product not found");
-    }
-
-    // Delete the thumbnail image from Cloudinary
-    const thumbnailId = product.thumbnail?.id;
-    if (thumbnailId) {
-        await removeImageFromCloud(thumbnailId);
-    }
-
-    // Delete additional images from Cloudinary
-    const imageIds: string[] = product.images?.map((image: IProductImage) => image.id) || [];
-    await Promise.all(
-        imageIds.map(async (publicId: string) => {
-            await removeImageFromCloud(publicId);
-        })
-    );
-
-    // Delete the product from the database
-    await product.deleteOne();
-
-    return res.status(200).json(new ApiResponse(200, null, "Product deleted successfully"));
 });
