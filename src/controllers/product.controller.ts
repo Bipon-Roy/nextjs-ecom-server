@@ -106,6 +106,90 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
     return res.status(201).json(new ApiResponse(201, product, "Product added successfully"));
 });
 
+export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { title, description, bulletPoints, mrp, salePrice, category, quantity } =
+        req.body as Partial<NewProductInfo>;
+
+    const files = req.files as { [fieldName: string]: Express.Multer.File[] };
+
+    // Extract files
+    const thumbnailFile = files?.thumbnail?.[0];
+    const imageFiles = files?.images || [];
+
+    // Find the product
+    const product = await ProductModel.findById(id);
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    // Validate category (assuming categories is an array of valid category names)
+    if (category && !categories.includes(category)) {
+        throw new ApiError(400, "Invalid category");
+    }
+
+    // Update thumbnail if a new one is uploaded
+    let newThumbnail = product.thumbnail;
+    if (thumbnailFile) {
+        // Remove old thumbnail from Cloudinary
+        await removeImageFromCloud(product.thumbnail.id);
+
+        // Upload new thumbnail to Cloudinary
+        const thumbnailResponse = await uploadOnCloudinary(thumbnailFile.path);
+        if (!thumbnailResponse) {
+            throw new ApiError(500, "Error while uploading new thumbnail to Cloudinary");
+        }
+
+        newThumbnail = {
+            url: thumbnailResponse.secure_url,
+            id: thumbnailResponse.public_id,
+        };
+    }
+
+    // Update images if new ones are uploaded
+    let newImages = product.images || [];
+    if (imageFiles.length > 0) {
+        // Remove old images from Cloudinary
+        for (const image of product.images || []) {
+            await removeImageFromCloud(image.id);
+        }
+
+        // Upload new images to Cloudinary
+        newImages = await Promise.all(
+            imageFiles.map(async (imageFile) => {
+                const imageResponse = await uploadOnCloudinary(imageFile.path);
+
+                if (!imageResponse) {
+                    throw new ApiError(500, `Error while uploading file ${imageFile.originalname} to Cloudinary`);
+                }
+
+                return {
+                    url: imageResponse.secure_url,
+                    id: imageResponse.public_id,
+                };
+            })
+        );
+    }
+
+    // Update product fields
+    product.title = title || product.title;
+    product.description = description || product.description;
+    product.bulletPoints = bulletPoints || product.bulletPoints;
+    product.thumbnail = newThumbnail;
+    product.images = newImages;
+    product.price = {
+        base: mrp || product.price.base,
+        discounted: salePrice || product.price.discounted,
+    };
+    product.category = category || product.category;
+    product.quantity = quantity || product.quantity;
+
+    // Save updated product
+    await product.save();
+
+    return res.status(200).json(new ApiResponse(200, product, "Product updated successfully"));
+});
+
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 

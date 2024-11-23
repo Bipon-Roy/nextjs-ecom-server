@@ -6,6 +6,7 @@ import {
     getAllProducts,
     getProductByCategory,
     getProductById,
+    updateProduct,
 } from "../controllers/product.controller";
 import { verifyToken } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
@@ -29,5 +30,16 @@ router.post(
 );
 
 router.route("/:id").delete(verifyToken, deleteProduct);
+
+router.put(
+    "/update/:id",
+    verifyToken,
+    verifyToken,
+    upload.fields([
+        { name: "thumbnail", maxCount: 1 },
+        { name: "images", maxCount: 5 },
+    ]),
+    updateProduct
+);
 
 export default router;
