@@ -85,3 +85,23 @@ export interface IProductImage {
     id: string;
     _id: string;
 }
+
+export interface IProductsCheckout {
+    title: string;
+    thumbnail: string;
+    price: number;
+    qty: number;
+}
+export interface ICartProduct {
+    productId: mongoose.Types.ObjectId;
+    quantity: number;
+}
+
+export interface IStripeCustomerInfo {
+    metadata: {
+        userId: string;
+        cartId: string;
+        type: "checkout" | "instant-checkout";
+        product: string;
+    };
+}
