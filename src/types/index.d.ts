@@ -86,10 +86,12 @@ export interface IProductImage {
     _id: string;
 }
 
-export interface IProductsCheckout {
-    title: string;
+export interface ICheckoutProducts {
+    id: string;
     thumbnail: string;
+    title: string;
     price: number;
+    totalPrice: number;
     qty: number;
 }
 export interface ICartProduct {

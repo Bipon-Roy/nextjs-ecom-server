@@ -7,9 +7,9 @@ import { isValidObjectId } from "mongoose";
 import { ProductModel } from "../models/product.model";
 import Stripe from "stripe";
 import { CartModel } from "../models/cart.model";
-import { ICartProduct, IProductsCheckout, IStripeCustomerInfo } from "../types";
+import { ICartProduct, ICheckoutProducts, IStripeCustomerInfo } from "../types";
+import { Types } from "mongoose";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY!;
 const webHookSecret = process.env.STRIPE_WEBHOOK_KEY!;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
@@ -111,13 +111,9 @@ export const stripeCheckoutHandler = asyncHandler(async (req: Request, res: Resp
     }
 
     // Fetching cart details
-    const cartItems = await CartModel.findById(cartId);
+    const cartDetails = await getCartItems(req.user._id, cartId);
 
-    if (!cartItems) {
-        throw new ApiError(404, "Cart doesn't exist");
-    }
-
-    const line_items = cartItems.products.map((product: IProductsCheckout) => {
+    const line_items = cartDetails.products.map((product: ICheckoutProducts) => {
         if (!product.price || !product.qty) {
             throw new ApiError(400, "Invalid product details in cart");
         }
@@ -270,3 +266,62 @@ export const stripeWebhookHandler = asyncHandler(async (req: Request, res: Respo
         throw new ApiError(500, error.message || "Internal server error!");
     }
 });
+
+//utils for stripe checkout
+const getCartItems = async (userId: string, cartId: string) => {
+    const [cartDetails] = await CartModel.aggregate([
+        {
+            $match: {
+                userId: new Types.ObjectId(userId),
+                _id: new Types.ObjectId(cartId),
+            },
+        },
+        { $unwind: "$items" },
+        {
+            $lookup: {
+                from: "products",
+                localField: "items.productId",
+                foreignField: "_id",
+                as: "product",
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                id: { $toString: "$_id" },
+                totalQuantity: { $sum: "$items.quantity" },
+                products: {
+                    id: { $toString: { $arrayElemAt: ["$product._id", 0] } },
+                    thumbnail: { $arrayElemAt: ["$product.thumbnail.url", 0] },
+                    title: { $arrayElemAt: ["$product.title", 0] },
+                    price: { $arrayElemAt: ["$product.price.discounted", 0] },
+                    qty: "$items.quantity",
+                    totalPrice: {
+                        $multiply: ["$items.quantity", { $arrayElemAt: ["$product.price.discounted", 0] }],
+                    },
+                },
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                id: { $first: "$id" },
+                totalQty: { $sum: "$totalQuantity" },
+                totalPrice: { $sum: "$products.totalPrice" },
+                products: { $push: "$products" },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                id: 1,
+                totalQty: 1,
+                totalPrice: 1,
+                products: 1,
+            },
+        },
+    ]);
+
+    if (!cartDetails) throw new ApiError(404, "Cart not found!");
+    return cartDetails;
+};
