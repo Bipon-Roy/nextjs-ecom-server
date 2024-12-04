@@ -26,7 +26,7 @@ Now, open the <b>nextjs-ecom-server</b> folder in your <b>IDE (VS Code recommend
 ```
 
 ```bash
-  nodemon index.js
+  nodemon src/index.ts
 ```
 
 You can run the local server on port [5000](http://localhost:5000/). Now, you should have accessed the following URLs on your local server.
