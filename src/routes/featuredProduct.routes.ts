@@ -6,7 +6,7 @@ import {
     getProductById,
     updateFeaturedProduct,
 } from "../controllers/featuredProduct.controller";
-import { verifyAdmin } from "../middlewares/auth.middleware";
+import { verifyRole, verifyToken } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
 
 const router = Router();
@@ -14,8 +14,8 @@ const router = Router();
 router.route("/all").get(getAllProducts);
 router.route("/:id").get(getProductById);
 
-router.route("/:id").delete(verifyAdmin, deleteFeaturedProduct);
-router.post("/add", verifyAdmin, upload.single("banner"), addFeaturedProduct);
-router.put("/update/:id", verifyAdmin, upload.single("banner"), updateFeaturedProduct);
+router.route("/:id").delete(verifyToken, verifyRole("admin"), deleteFeaturedProduct);
+router.post("/add", verifyToken, verifyRole("admin"), upload.single("banner"), addFeaturedProduct);
+router.put("/update/:id", verifyToken, verifyRole("admin"), upload.single("banner"), updateFeaturedProduct);
 
 export default router;

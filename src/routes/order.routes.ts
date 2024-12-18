@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyAdmin, verifyToken } from "../middlewares/auth.middleware";
+import { verifyRole, verifyToken } from "../middlewares/auth.middleware";
 import {
     getOrderedItems,
     stripeCheckoutHandler,
@@ -11,7 +11,7 @@ import {
 const router = Router();
 
 router.route("/all").get(verifyToken, getOrderedItems);
-router.route("/update-status").get(verifyAdmin, updateOrderStatus);
+router.route("/update-status").get(verifyToken, verifyRole("admin"), updateOrderStatus);
 
 router.post("/stripe/webhook", stripeWebhookHandler);
 router.post("/checkout/instant", verifyToken, stripeInstantCheckoutHandler);

@@ -8,7 +8,7 @@ import {
     getProductById,
     updateProduct,
 } from "../controllers/product.controller";
-import { verifyAdmin, verifyToken } from "../middlewares/auth.middleware";
+import { verifyRole, verifyToken } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
 
 const router = Router();
@@ -21,7 +21,8 @@ router.route("/add-review").post(verifyToken, addProductReviews);
 
 router.post(
     "/add-product",
-    verifyAdmin,
+    verifyToken,
+    verifyRole("admin"),
     upload.fields([
         { name: "thumbnail", maxCount: 1 },
         { name: "images", maxCount: 5 },
@@ -29,11 +30,12 @@ router.post(
     addNewProduct
 );
 
-router.route("/:id").delete(verifyAdmin, deleteProduct);
+router.route("/:id").delete(verifyToken, verifyRole("admin"), deleteProduct);
 
 router.put(
     "/update/:id",
-    verifyAdmin,
+    verifyToken,
+    verifyRole("admin"),
     upload.fields([
         { name: "thumbnail", maxCount: 1 },
         { name: "images", maxCount: 5 },
