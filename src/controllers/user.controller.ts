@@ -18,6 +18,7 @@ import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
+import passport from "passport";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -125,6 +126,39 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
         );
 });
 
+export const loginWithGoogle = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user;
+
+    if (!user) {
+        return res.status(401).json({ error: "Google authentication failed" });
+    }
+
+    // Generate access and refresh tokens
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+
+    // Set cookies and return response
+    const options = {
+        httpOnly: true,
+        secure: true,
+    };
+
+    const loggedInUser = await UserModel.findById(user._id).select("-password -refreshToken");
+    return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user: loggedInUser,
+                    accessToken,
+                    refreshToken,
+                },
+                "Google Sign-In successful"
+            )
+        );
+});
 export const forgetPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body as ForgetPassReq;
     if (!email) {
