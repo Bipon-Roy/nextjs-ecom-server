@@ -142,22 +142,8 @@ export const loginWithGoogle = asyncHandler(async (req: Request, res: Response) 
         secure: true,
     };
 
-    const loggedInUser = await UserModel.findById(user._id).select("-password -refreshToken");
-    return res
-        .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .json(
-            new ApiResponse(
-                200,
-                {
-                    user: loggedInUser,
-                    accessToken,
-                    refreshToken,
-                },
-                "Google Sign-In successful"
-            )
-        );
+    res.cookie("accessToken", accessToken, options).cookie("refreshToken", refreshToken, options);
+    res.redirect(process.env.Frontend_Redirect_URL!);
 });
 export const forgetPassword = asyncHandler(async (req: Request, res: Response) => {
     const { email } = req.body as ForgetPassReq;
