@@ -18,7 +18,6 @@ import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
-import passport from "passport";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
