@@ -8,6 +8,7 @@ import { isValidObjectId, Types } from "mongoose";
 import { ReviewModel } from "../models/review.model";
 import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
 import categories from "../utils/productCategories";
+import { compressImage } from "../utils/imageCompressor";
 
 export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
     const products = await ProductModel.find();
@@ -63,8 +64,9 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
         throw new ApiError(400, "Invalid category");
     }
 
-    // Upload thumbnail to Cloudinary
-    const thumbnailResponse = await uploadOnCloudinary(thumbnailFile.path);
+    // Compress and upload thumbnail
+    const compressedThumbnailPath = await compressImage(thumbnailFile.path);
+    const thumbnailResponse = await uploadOnCloudinary(compressedThumbnailPath);
 
     if (!thumbnailResponse) {
         throw new ApiError(500, "Error while uploading thumbnail to Cloudinary");
@@ -73,10 +75,11 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
     // Upload additional images to Cloudinary
     const uploadedImages = await Promise.all(
         imageFiles.map(async (imageFile) => {
-            const imageResponse = await uploadOnCloudinary(imageFile.path);
+            const compressedImagePath = await compressImage(imageFile.path);
+            const imageResponse = await uploadOnCloudinary(compressedImagePath);
 
             if (!imageResponse) {
-                throw new ApiError(500, `Error while uploading file ${imageFile.originalname} to Cloudinary`);
+                throw new ApiError(500, `Error uploading file ${imageFile.originalname} to Cloudinary`);
             }
 
             return {
@@ -85,6 +88,7 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
             };
         })
     );
+
     // Create a new product
     const product = await ProductModel.create({
         title,
@@ -100,7 +104,7 @@ export const addNewProduct = asyncHandler(async (req: Request, res: Response) =>
             discounted: salePrice,
         },
         category,
-        quantity: quantity,
+        quantity,
     });
 
     return res.status(201).json(new ApiResponse(201, product, "Product added successfully"));
