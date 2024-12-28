@@ -1,5 +1,6 @@
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
-import fs from "fs";
+import { TEMP_DIR } from "./tempPath";
+import { cleanupTempDirectory } from "./cleanUpTemp";
 
 // Configure Cloudinary
 cloudinary.config({
@@ -20,16 +21,16 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
         });
 
         // File uploaded successfully, clean up the local file after upload
-        if (localFilePath) {
-            fs.unlinkSync(localFilePath); // Safe to call after check
+        if (TEMP_DIR) {
+            await cleanupTempDirectory(TEMP_DIR);
         }
 
         return response;
     } catch (error) {
         console.log(error);
 
-        if (localFilePath) {
-            fs.unlinkSync(localFilePath);
+        if (TEMP_DIR) {
+            await cleanupTempDirectory(TEMP_DIR);
         }
         return null;
     }

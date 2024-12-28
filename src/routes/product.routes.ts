@@ -10,7 +10,6 @@ import {
 } from "../controllers/product.controller";
 import { verifyRole, verifyToken } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
-import { cleanupTempFiles } from "../middlewares/cleanup.middleware";
 
 const router = Router();
 // Middleware for handling multiple file fields
@@ -28,8 +27,7 @@ router.post(
         { name: "thumbnail", maxCount: 1 },
         { name: "images", maxCount: 5 },
     ]),
-    addNewProduct,
-    cleanupTempFiles
+    addNewProduct
 );
 
 router.route("/:id").delete(verifyToken, verifyRole("admin"), deleteProduct);
