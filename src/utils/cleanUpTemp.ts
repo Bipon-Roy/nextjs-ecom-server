@@ -9,24 +9,26 @@ export const cleanupTempDirectory = (dirPath: string): void => {
                 files.forEach((file) => {
                     if (file !== ".gitkeep") {
                         const filePath = path.join(dirPath, file);
-                        try {
-                            fs.unlinkSync(filePath);
-                        } catch (error) {
-                            console.error(`Error deleting file ${file}:`, error);
-                            // Retry after a short delay
-                            setTimeout(() => {
-                                try {
-                                    fs.unlinkSync(filePath);
-                                } catch (retryError) {
-                                    console.error(`Retry failed for file ${file}:`, retryError);
-                                }
-                            }, 5000);
-                        }
+                        fs.unlink(filePath, (err) => {
+                            if (err) {
+                                console.error(`Error deleting file ${file}:`, err);
+                                // Retry after a short delay
+                                setTimeout(() => {
+                                    fs.unlink(filePath, (retryErr) => {
+                                        if (retryErr) {
+                                            console.error(`Retry failed for file ${file}:`, retryErr);
+                                        }
+                                    });
+                                }, 1000);
+                            } else {
+                                console.log(`File ${file} deleted successfully.`);
+                            }
+                        });
                     }
                 });
             }
         } catch (error) {
             console.error("Error cleaning up temp directory:", error);
         }
-    }, 5000); // Delay for safety
+    }, 1000); // Delay for safety
 };

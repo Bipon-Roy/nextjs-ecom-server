@@ -6,7 +6,9 @@ export const compressImage = async (filePath: string): Promise<string> => {
     const compressedFilePath = path.join(path.dirname(filePath), `compressed-${uuidv4()}.webp`);
 
     try {
-        await sharp(filePath).webp({ quality: 80 }).toFile(compressedFilePath);
+        await sharp(filePath)
+            .webp({ quality: 80 }) // Convert to WebP with 80% quality
+            .toFile(compressedFilePath);
 
         sharp.cache(false);
 
