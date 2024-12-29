@@ -22,7 +22,7 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
 
         // File uploaded successfully, clean up the local file after upload
         if (TEMP_DIR) {
-            await cleanupTempDirectory(TEMP_DIR);
+            cleanupTempDirectory(TEMP_DIR);
         }
 
         return response;
@@ -30,7 +30,7 @@ const uploadOnCloudinary = async (localFilePath: string | undefined): Promise<Up
         console.log(error);
 
         if (TEMP_DIR) {
-            await cleanupTempDirectory(TEMP_DIR);
+            cleanupTempDirectory(TEMP_DIR);
         }
         return null;
     }
