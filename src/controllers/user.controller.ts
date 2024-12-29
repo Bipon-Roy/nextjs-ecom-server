@@ -18,6 +18,7 @@ import { PasswordResetTokenModel } from "../models/user/passwordReset.model";
 import { isValidObjectId } from "mongoose";
 import jwt from "jsonwebtoken";
 import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
+import { compressImage } from "../utils/imageCompressor";
 
 const generateAccessAndRefreshTokens = async (userId: string) => {
     try {
@@ -335,7 +336,9 @@ export const updateUserProfile = async (req: Request, res: Response) => {
         }
 
         if (avatar) {
-            const cloudinaryResponse = await uploadOnCloudinary(avatar);
+            // Compress and upload banner
+            const compressedAvatar = await compressImage(avatar);
+            const cloudinaryResponse = await uploadOnCloudinary(compressedAvatar);
 
             if (!cloudinaryResponse) {
                 throw new ApiError(400, "Error while uploading on avatar");

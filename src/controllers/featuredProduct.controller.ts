@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { FeaturedProductModel } from "../models/featuredProduct.model";
 import { removeImageFromCloud, uploadOnCloudinary } from "../utils/cloudinary";
 import { FeaturedProduct } from "../types";
+import { compressImage } from "../utils/imageCompressor";
 
 export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
     const products = await FeaturedProductModel.find();
@@ -36,7 +37,9 @@ export const addFeaturedProduct = asyncHandler(async (req: Request, res: Respons
         throw new ApiError(400, "All fields (link, linkTitle, title, and banner) are required");
     }
 
-    const cloudinaryResponse = await uploadOnCloudinary(bannerFile);
+    // Compress and upload banner
+    const compressedBannerFile = await compressImage(bannerFile);
+    const cloudinaryResponse = await uploadOnCloudinary(compressedBannerFile);
 
     if (!cloudinaryResponse) {
         throw new ApiError(400, "Error while uploading on avatar");
@@ -74,7 +77,10 @@ export const updateFeaturedProduct = asyncHandler(async (req: Request, res: Resp
         if (product.banner.id) {
             await removeImageFromCloud(product.banner.id);
         }
-        const cloudinaryResponse = await uploadOnCloudinary(bannerFile);
+
+        // Compress and upload banner
+        const compressedBannerFile = await compressImage(bannerFile);
+        const cloudinaryResponse = await uploadOnCloudinary(compressedBannerFile);
 
         if (!cloudinaryResponse) {
             throw new ApiError(500, "Error while uploading new banner to Cloudinary");

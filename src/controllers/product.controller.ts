@@ -138,8 +138,11 @@ export const updateProduct = asyncHandler(async (req: Request, res: Response) =>
         // Remove old thumbnail from Cloudinary
         await removeImageFromCloud(product.thumbnail.id);
 
-        // Upload new thumbnail to Cloudinary
-        const thumbnailResponse = await uploadOnCloudinary(thumbnailFile.path);
+        // Compress and Upload new thumbnail to Cloudinary
+
+        const compressedThumbnailPath = await compressImage(thumbnailFile.path);
+        const thumbnailResponse = await uploadOnCloudinary(compressedThumbnailPath);
+
         if (!thumbnailResponse) {
             throw new ApiError(500, "Error while uploading new thumbnail to Cloudinary");
         }
@@ -161,7 +164,8 @@ export const updateProduct = asyncHandler(async (req: Request, res: Response) =>
         // Upload new images to Cloudinary
         newImages = await Promise.all(
             imageFiles.map(async (imageFile) => {
-                const imageResponse = await uploadOnCloudinary(imageFile.path);
+                const compressedImagePath = await compressImage(imageFile.path);
+                const imageResponse = await uploadOnCloudinary(compressedImagePath);
 
                 if (!imageResponse) {
                     throw new ApiError(500, `Error while uploading file ${imageFile.originalname} to Cloudinary`);
